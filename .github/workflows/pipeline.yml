@@ -23,7 +23,7 @@ jobs:
         run: npm run test
       - name: Install Playwright Browser
         run: |
-          sudo npx playwright install-deps && \
+          sudo npx playwright install-deps
           npx playwright install && 
       - name: e2e test
         run: npm run test:e2e
