@@ -46,8 +46,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Bump version and push tag
-        if: ${{ env.CONDITION == true && contains(join(github.event.commits.*.message, '\n'), '#skip') == false }}
+        if: ${{ env.CONDITION == true && contains(join(toJson(github.event.commits.*.message), '\n'), '#skip') == false }}
         uses: anothrNick/github-tag-action@1.71.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEFAULT_BUMP: 'patch'
+          DEFAULT_BUMP: patch
+  notification:
+    needs: [tag_release]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Notify Success
+        if: ${{ needs.simple_deployment_pipeline.result == 'success' }}
+        uses: rjstone/discord-webhook-notify@v1.0.4
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          severity: info
+          text: "A new version of Pokedex deployed"
+          description: to ${{ secrets.RENDER_DEPLOYED_URL }}
+      - name: Notify Failure
+        if: ${{ needs.simple_deployment_pipeline.result == 'failure' }}
+        uses: rjstone/discord-webhook-notify@v1.0.4
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          severity: error
+          text: "Build failed"
+          description: commit ${{ github.sha }} failed to build
+
+  
